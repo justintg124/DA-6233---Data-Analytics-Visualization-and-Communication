@@ -1,0 +1,236 @@
+---
+title: "Tables using gt"
+format: 
+  html:
+    embed-resources: true
+    theme: 
+      light: litera
+---
+
+Informative tables have become pervasive. As data analysts, we mostly want to show our results as easily readable tables. Although creating tables in Excel is easy, formatting them each time you update the data can be boring and error-prone. In the last five years, several R packages were introduced to make our life easy and create nice tables. `gt` is one such package.
+
+Note that below we are also installing/loading `gtExtras` package, which brings additional functionalities to `gt`
+
+```{r}
+pacman::p_load(tidyverse, gt, gtExtras)
+```
+
+```{r}
+dt = read_csv("company_financials_csv.zip", show_col_types = F)
+```
+
+Let's output a small table with Tasla's sales and R&D spending in the last 10 quarters. Also, output the R&D intensity defined as R&D/Sales
+
+```{r}
+tesla_rnd = dt |> 
+  filter(tic == "TSLA") |> 
+  select(fyearq, fqtr, saleq, xrdq) |>
+  mutate(rnd_int = xrdq / saleq) |> 
+  arrange(fyearq, fqtr) |> 
+  tail(10)
+
+tesla_rnd
+```
+
+This table is OK but it is just a printout of the data frame. Let's see what `gt` can do:
+
+```{r}
+tesla_table = tesla_rnd |> gt()
+
+tesla_table
+```
+
+As you see, `gt` made a clean table with only a signle call to `gt()` function. It doens't look bad and given that we used literally one function without any adidtional arguments, this is a low cost effort.
+
+Similar to `ggplot2`, `gt` has a grammar of table graphics. It is also layered. Furthermore, it is highly customizable. 
+
+
+Let's understand how you can change the looks of the table by first learning about its parts.
+
+```{r}
+knitr::include_graphics("parts-of-gt-table.png")
+```
+
+
+## Adding headers
+
+```{r}
+tesla_table = tesla_table |> 
+  tab_header(
+    title = "Tesla spends 3%-5% of its sales on R&D",
+    subtitle = "The R&D intensity has been generally constant over the quarters"
+  )
+
+tesla_table
+
+```
+
+Similar to `ggtext`, we can use markdown with `gt` using `md()` function.
+
+```{r}
+tesla_table = tesla_table |> 
+  tab_header(
+    title = md("Tesla spends **3%-5%** of its sales on R&D"),
+    subtitle = md("The R&D intensity has been _generally_ constant over the quarters")
+  )
+
+tesla_table
+```
+
+ 
+
+## Column names
+ 
+Changing column names is easy
+ 
+```{r}
+tesla_table = tesla_table |> 
+  cols_label(fyearq = "Fiscal Year",
+             fqtr = "Fiscal Quarter",
+             saleq = "Sales",
+             xrdq = "R&D",
+             rnd_int = "R&D Intensity")
+
+tesla_table
+```
+
+Using spanner column labels we can create multiple levels of column labels. For example, we can combine fiscal year and quarter column labels into a higher level "Fiscal period" spanner column label as follows:
+
+```{r}
+tesla_table = tesla_table |> 
+  tab_spanner(
+    label = "Fiscal Period",
+    columns = c(fyearq, fqtr)
+  ) |> 
+  cols_label(fyearq = "Year",
+             fqtr = "Quarter",
+             saleq = "Sales",
+             xrdq = "R&D",
+             rnd_int = "R&D Intensity")
+
+tesla_table
+```
+
+
+## Change the formatting of the cells (values inside the table)
+
+Center align all the columns 
+
+```{r}
+tesla_table = tesla_table |> 
+  cols_align(
+    align = "center",
+    columns = everything()
+  )
+
+tesla_table
+```
+
+Or align columns selectively. Below, I center align first two columns and right align the next three columns.
+
+```{r}
+tesla_table = tesla_table |> 
+  cols_align(
+    align = "center",
+    columns = c(1 ,2)
+  ) |> 
+  cols_align(
+    align = "right",
+    columns = 3:5
+  )
+
+tesla_table
+```
+
+
+```{r}
+tesla_table = tesla_table |> 
+  fmt_number(columns = 3:4, decimals = 0)
+
+tesla_table
+```
+
+Finally, format the values in the last column to percentages
+
+```{r}
+tesla_table = tesla_table |> 
+  fmt_percent(columns = 5, decimals = 2)
+
+tesla_table
+```
+
+## Adding themes
+
+`gt` tables are highly customizable. However, I prefer to use ready made themes form `gtExtras` package.
+
+
+### Five Thirty Eight
+
+```{r}
+tesla_table |> 
+  gtExtras::gt_theme_538()
+```
+
+### New York Times
+
+```{r}
+tesla_table |> 
+  gtExtras::gt_theme_nytimes()
+```
+
+### ESPN
+
+```{r}
+tesla_table |> 
+  gtExtras::gt_theme_espn()
+```
+
+### Dark
+
+```{r}
+tesla_table |> 
+  gtExtras::gt_theme_dark()
+```
+
+
+Learn more about the features of `gtExtras` by visiting this page: https://jthomasmock.github.io/gtExtras/articles/plotting-with-gtExtras.html
+
+
+## Add a logo to the table
+
+
+    title = 
+    
+
+```{r}
+tesla_table = tesla_table |> 
+  tab_header(
+    title = html("<table><tr><td align='center' valign='center'>", 
+                      gt::local_image('1200px-Tesla_logo.png', height = 80),
+                      "</td><td><b>Tesla spends 3%-5% of its sales on R&D</b></td></tr></table>"),
+          subtitle = md("The R&D intensity has been _generally_ constant over the quarters")) |> 
+  gtExtras::gt_theme_espn()
+
+tesla_table
+```
+
+## Saving the table
+
+Finally, we can save this table to the disk in various formats
+
+```{r}
+#| eval: false
+
+# png
+gtsave(tesla_table, "tesla_table.png", expand = 50)
+
+# html
+gtsave(tesla_table, "tesla_table.html")
+
+# pdf
+
+gtsave(tesla_table, "tesla_table.pdf")
+
+```
+
+

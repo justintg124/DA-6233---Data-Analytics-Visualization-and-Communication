@@ -1,0 +1,118 @@
+---
+title: "Themes"
+format: html
+---
+
+```{r}
+pacman::p_load(tidyverse, ggtext, hrbrthemes, ggthemes, showtext, ggedit)
+theme_set(theme_minimal())
+```
+
+
+```{r}
+dt = read_csv("company_financials_csv.zip", show_col_types = FALSE)
+```
+
+
+```{r}
+base = dt |> 
+  filter(!is.na(saleq) & !is.na(oiadpq)) |> 
+  ggplot(aes(x = saleq, y = oiadpq)) +
+  geom_point(shape = 21, color = "#bd2e38", fill = "#f82267", alpha = 0.6, size = 3) +
+  labs(x = "Sales", y = "Operating Income") +
+  scale_x_continuous(labels = scales::dollar_format()) +
+  scale_y_continuous(labels = scales::dollar_format())
+```
+
+```{r}
+base
+```
+
+A couple of themes from `ggthemes` package
+
+```{r}
+base + theme_economist()
+```
+
+```{r}
+base + theme_fivethirtyeight()
+```
+
+
+A couple of themes from the `hrbrthemes` package. This package requires installing fonts to the system, which can be a bit cumbersome. A solution to this problem is to use `showtext`
+
+We will use "Roboto Condensed" and "Inter" fonts.
+
+```{r}
+font_add_google(name = "Roboto Condensed", family = "rc")
+font_add_google(name = "Inter", family = "inter")
+```
+
+
+```{r}
+showtext_auto()
+base + theme_ipsum_rc(base_family = "rc")
+showtext_end()
+```
+
+Using Inter
+
+```{r}
+showtext_auto()
+base +theme_ipsum_rc(base_family = "inter")
+showtext_end()
+```
+
+Changing the Axes titles positioning, size, etc.
+
+```{r}
+showtext_auto()
+base +
+  theme_ipsum_rc(base_family = "inter",
+                      axis_title_just = "cc",
+                      axis_title_size = 16)
+showtext_end()
+```
+
+Changing the font in the theme will only affect the text outside the panel. For example, notice the font in the annotation label.
+
+```{r}
+
+showtext_auto()
+base +
+  annotate(geom = "label", 
+           x = 150000, y = 30000, 
+           label = "There are two potential\nregression lines",
+           color = "gray30") +
+  theme_ipsum_rc(base_family = "rc")
+
+showtext_end()
+```
+
+```{r}
+showtext_auto()
+base +
+  annotate(geom = "label", 
+           x = 150000, y = 30000, 
+           label = "There are two potential\nregression lines",
+           family = "rc", color = "gray30") +
+  theme_ipsum_rc(base_family = "rc")
+showtext_end()
+```
+
+A detour. Sometimes we want to remove a `geom` from an already created plot and replace it with another `geom`. ggedit package allows you to do this. For example, below I am remove the existing `geom_point` and replacing it with a new layer that adds `fill` aesthetic to differentiate points belonging to Amazon.com.
+
+```{r}
+showtext_auto()
+
+base |> 
+  ggedit::remove_geom("point") +
+  geom_point(aes(fill = ifelse(tic == "AMZN", "1", "0")), 
+             shape = 21, alpha = 0.6, size = 3, show.legend = FALSE) +
+  annotate(geom = "label",
+           x = 150000, y = 20000,
+           label = "Amazon's profit margins\nare very low",
+           family = "rc", color = "gray30") +
+  theme_ipsum_rc(base_family = "rc")
+showtext_end()
+```
