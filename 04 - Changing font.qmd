@@ -1,0 +1,131 @@
+---
+title: "Changing fonts and enhancing plots"
+author: "Ashwin Malshe"
+date: "1 October 2024"
+output: html_document
+---
+
+For using any fonts outside the fonts installed on your system, I strongly recommend using `showtext` package.
+
+Install is by running this code in the console:
+
+install.packages("showtext")
+
+```{r}
+#| label: setup
+#| include: false
+
+library(ggplot2)
+library(showtext)
+```
+
+
+Get the font you like either from Google Fonts or from a `.ttf` or `.otf` file.
+
+I am importing this cool font:
+https://fonts.google.com/specimen/Monoton
+
+The `family` argument below is a name that I choose to give to this font to be used in this session. You can use any name you want.
+
+```{r}
+sysfonts::font_add_google(name = "Monoton", family = "Monoton", db_cache = FALSE)
+```
+
+
+Before we create a plot, we need to start `showtext`:
+
+```{r}
+showtext_auto()
+```
+
+Now we are ready to create a plot
+
+```{r}
+#| message = FALSE
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "A plot using Monoton") +
+  theme(plot.title = element_text(family = "Monoton", color = "blue", hjust = 0.5))
+
+```
+
+
+## Reading a local font file
+
+```{r}
+sysfonts::font_add(family = "retina", regular = "Retina-Light.otf")
+```
+
+
+```{r}
+#| message = FALSE
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "A plot using Monoton", 
+       subtitle = "With a subtitle using Retina Light",
+       x = "Engine Displacement (liters)",
+       y = "Highway Mileage (miles/gallon)") +
+  theme(plot.title = element_text(family = "Monoton"),
+        plot.subtitle = element_text(family = "retina"),
+        axis.title = element_text(family = "retina"),
+        axis.text = element_text(family = "retina"))
+
+```
+## Enhancing the plot
+
+
+Let's annotate a point on extreme right.
+
+```{r}
+mpg |> 
+  select(displ, hwy, model) |> 
+  filter(displ == 7)
+```
+
+
+
+
+
+```{r}
+#| message = FALSE
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  annotate(geom = "label", x = 6.8, y = 27, label = "Corvette", family = "retina") +
+  # annotate(geom = "point", x = 7, y = 24, shape = 21, size = 3) +
+  # annotate(geom = "point", x = 7, y = 24, color = "red") +
+  labs(title = "A plot using Monoton", 
+       subtitle = "With a subtitle using Retina Light",
+       x = "Engine Displacement (liters)",
+       y = "Highway Mileage (miles/gallon)") +
+  theme(plot.title = element_text(family = "Monoton"),
+        plot.subtitle = element_text(family = "retina"),
+        axis.title = element_text(family = "retina"),
+        axis.text = element_text(family = "retina"))
+
+```
+
+How about adding a segment connecting the point and the label? We can use `geom_segment` or `annotate` to achieve this.
+
+```{r}
+#| message = FALSE
+ggplot(mpg, aes(displ, hwy)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  annotate(geom = "label", x = 6.6, y = 30, label = "Corvette", family = "retina") +
+  annotate(geom = "segment", x = 6.7, y = 29, xend = 7, yend = 24, linewidth = 0.2) +
+  annotate(geom = "point", x = 7, y = 24, shape = 21, size = 3) +
+  annotate(geom = "point", x = 7, y = 24, color = "red") +
+  labs(title = "A plot using Monoton", 
+       subtitle = "With a subtitle using Retina Light",
+       x = "Engine Displacement (liters)",
+       y = "Highway Mileage (miles/gallon)") +
+  theme(plot.title = element_text(family = "Monoton"),
+        plot.subtitle = element_text(family = "retina"),
+        axis.title = element_text(family = "retina"),
+        axis.text = element_text(family = "retina"))
+
+```
+

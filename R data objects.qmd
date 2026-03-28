@@ -1,0 +1,124 @@
+---
+title: "R data objects"
+format: html
+editor: visual
+---
+
+[The text enclosed in triple dashes in the beginning of the Quarto document has all the options specified for this document. This syntax is called YAML and it's quite popular in various languages. There are more than 1,000 possible options for Quarto documents, and they are not listed in one place, unfortunately. However, this is a good place to find all the relevant ones: https://quarto.org/docs/reference/formats/html.html. Here is a user attempt to locate different options: https://github.com/quarto-dev/quarto-cli/discussions/6585#discussion-5547459]{.aside}
+
+# R fundamentals
+
+R is a programming language for data scientists. Therefore, it may feel quite different coming from traditional, multi-purpose programming languages such as Python.
+
+Let's understand various data objects in R briefly.
+
+## Vectors
+
+Vectors are the building blocks of various data objects in R. Imagine a column of values in Excel. As long as this column contains elements of the same type, i.e., numeric, character, date, etc., this column can be considered as an example of a vector in R.
+
+In R, typically a vector is specified by enclosing in a function `c()` which is short for concatenate. For example, we can print a numeric vector of first 10 even natural numbers as follows:
+
+```{r}
+c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+```
+
+In R, similar to Python, you can print an object without explicitly using the `print()` function. The downside of this is that often we may print a large object by mistake by just typing and executing the name of the object.
+
+Next, let's save this vector in an object.
+
+```{r}
+vec1 = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+```
+
+Now, `vec1` is a vector with first 10 even natural numbers. Notice `vec1` starts showing up in the "Environment" pane on right.
+
+Print `vec1`
+
+```{r}
+vec1
+```
+
+### Other types of vectors we will use in this course
+
+```{r}
+# Character
+
+vec2 = c("this", "is", "a", "character", "vector")
+
+# Logical
+
+vec3 = c(TRUE, TRUE, FALSE, FALSE)
+
+```
+
+There are a few more types of vectors but we are unlikely to use them.
+
+Two very relevant functions for vectors are `class` and `length`. `class` tells us the type of the vector and `length` tells us the number of elements in the vector.
+
+```{r}
+class(vec1)
+length(vec1)
+```
+
+You can subset a vector by using `[]`
+
+```{r}
+# Extract 5th element from vec1
+
+vec1[5]
+
+# Extract 5th and 6th elements from vec1
+
+vec1[5:6]
+
+#or
+
+vec1[c(5, 6)]
+
+# Extract 1, 7, and 9th elements from vec1
+
+vec1[c(1, 7, 9)]
+
+```
+
+## Dataframe
+
+A dataframe is a collection of vectors with the same length. These are tabular objects.
+
+Let's create a dataframe using the following vectors:
+
+```{r}
+v1 = c(1:10)
+v2 = letters[1:10] # letters is a inbuilt vector of English alphabet
+v3 = rnorm(10) # This generates normally distributed random numbers from a distribution with 0 mean and 1 variance.
+```
+
+```{r}
+d1 = data.frame(my_numbers = v1,
+                my_letters = v2,
+                my_random_numbers = v3)
+
+d1
+```
+
+## Factors
+
+Factors in R are special type of character vectors. Factors have an additional `attribute` called `levels` which can help in ordering the values in a character variable.
+
+Let's create a factor from `v2`
+
+```{r}
+v4 = factor(v2)
+```
+
+When we print `v4`, R also shows us the levels of the factor. R uses actual values of the character variable as levels.
+
+```{r}
+v4
+```
+
+```{r}
+attributes(v4)
+```
+
+We will use factors more later. At this point, just make a note of this object.

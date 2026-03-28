@@ -1,0 +1,333 @@
+---
+title: "Basic Plots"
+format: html
+---
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+```
+
+I will use `theme_minimal()` for all the plots by setting it as the default.
+
+```{r}
+
+theme_set(theme_minimal())
+
+```
+
+
+We will continue to use `mpg` dataset
+
+For data exploration, we should understand the distribution of various variables in the data.
+
+## Univariate plots
+
+Univariate plots involve only one variable. They typically show frequency distributions of variables. 
+
+## Histogram
+
+Histograms show the frequency distribution of a continuous variable. 
+
+```{r}
+
+ggplot(mpg, aes(x = hwy)) +
+  geom_histogram()
+```
+
+::: {.callout-tip title="Tip about messages"}
+`ggplot2` often outputs messages with plots to explain the underlying assumptions it used to create the plot. For example, for histogram it assumes the number of bins required is 30. So it will alert you about this choice. If you want to hide it from the output, you can use `#| message: false` at the top of the chunk.
+
+:::
+
+Note that we did not provide any variable to be mapped to the Y axis and yet we have the count plotted on the Y axis. You can even see the axis title `count` showing up. How did that happen?
+
+In order to create the histogram, `ggplot2` performs following actions in the background:
+
+1. Using the range of the variable (max - min), create 30 bins of equal widths. 30 is the default.
+2. Calculate the number of observations that fall into each bin. This is the count.
+3. Plot the count for each bin.
+
+Change the default number of bins
+```{r}
+ggplot(mpg, aes(x = hwy)) +
+  geom_histogram(bins = 15)
+```
+
+Use `color` argument to specify the line color of each bar.
+
+```{r}
+ggplot(mpg, aes(x = hwy)) +
+  geom_histogram(bins = 15, color = "white")
+```
+
+### Boxplot
+
+A boxplot shows the minimum, 1st quartile, median (2nd quartile), 3rd quartile, and maximim of a continuous variable. The default is to specify only y axis variable. In the example below, I will use `hwy` as the Y axis variable.
+
+```{r}
+ggplot(mpg, aes(y = hwy)) +
+  geom_boxplot()
+```
+
+**The width of the boxplot has no meaning**. 
+
+
+It might be more interesting to compare `hwy` boxplots for different number of cylinders.
+
+```{r}
+ggplot(mpg, aes(x = factor(cyl),y = hwy)) +
+  geom_boxplot() 
+```
+
+:::{.callout-important}
+In the above code, what happens if you don't use `factor()`?
+:::
+
+
+There are not many cars with 5 cylinders so let's drop those observations.
+
+```{r}
+mpg  |>  
+  filter(cyl != 5) |> 
+  ggplot(aes(x = factor(cyl),y = hwy)) +
+  geom_boxplot() 
+```
+
+What is your takeaway from this visualization?
+
+
+### Bar plot
+
+A bar plot shows the frequency distribution of a discrete variable.
+
+Similar to the histogram, `ggplot2` _creates_ the count variable for Y axis. 
+
+
+```{r}
+ggplot(mpg, aes(x = class)) +
+  geom_bar()
+```
+
+This is equivalent to using a summarized data and then using `geom_col()` instead of `geom_bar()` as shown below:
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = class, y = count)) +
+  geom_col()
+```
+
+By default, `ggplot2` arranges the X axis labels alphabetically. You can reorder them based on some other variable.
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col()
+```
+
+The same plot but in a descending order of `count`. To achieve this, I changed the sign of `count` inside `reorder()` to be negative.
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, -count), y = count)) +
+  geom_col()
+```
+
+
+Note how the X and Y axis titles are populated automatically from the variable names. As we are create a new reordered variable, the X axis title is not useful at all. We can fix this by using the `labs()` function.
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col() +
+  labs(x = "Vehicle Class", y = "Count")
+```
+
+
+Furthermore, we need to add annotations to the bars. Otherwise, it is difficult to get the exact heights of the bars. For this we use `geom_text()`
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col() +
+  geom_text(aes(label = count)) +
+  labs(x = "Vehicle Class", y = "Count")
+```
+
+:::{.callout-note}
+Note that the `aes()` inside `geom_text()` inherits x and y aesthetics from `ggplot()`. Thus, it needs only one additional argument `label` which specifies what we want to show on the bars.
+
+:::
+
+
+The text shows up half inside the bar and half outside. You can adjust that in multiple ways. One easy way is to specify the Y aesthetic in `geom_text()` so that you can adjust the exact height where the text shows up. For example, if you want all the annotations show up exactly at Y = 50:
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col() +
+  geom_text(aes(label = count, y = 50)) +
+  labs(x = "Vehicle Class", y = "Count")
+```
+
+This doesn't look nice. Let's change it to a value slightly higher than `count`
+
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col() +
+  geom_text(aes(label = count, y = count + 2)) +
+  labs(x = "Vehicle Class", y = "Count")
+```
+
+We could also place it inside the bars. But for this, we should change the font color to a lighter shade.
+
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col() +
+  geom_text(aes(label = count, y = count - 2), color = "white") +
+  labs(x = "Vehicle Class", y = "Count")
+```
+Note how I wrote `color` outside `aes()` function. What if we wrote it inside?
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col() +
+  geom_text(aes(label = count, y = count - 2, color = "white")) +
+  labs(x = "Vehicle Class", y = "Count")
+```
+
+**_What's going on?_**
+
+### Add title, subtitle, and caption
+
+```{r}
+mpg |> 
+  group_by(class) |> 
+  summarize(count = n()) |> 
+  ggplot(aes(x = reorder(class, count), y = count)) +
+  geom_col() +
+  geom_text(aes(label = count, y = count - 2), color = "white") +
+  labs(x = "Vehicle Class", y = "Count",
+       title = "SUVs dominate the sample",
+       subtitle = "Only a handful of minivans and 2-seaters are in the sample",
+       caption = "This dataset contains a subset of the fuel economy data that the EPA makes available on https://fueleconomy.gov/")
+```
+
+## Bivariate plots
+
+Bivariate plots show the relationship between two variables in the data.
+
+### Scatterplot
+
+A Scatterplot allows us to plot the relationship between two **continuous** variables.
+
+```{r}
+ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point() +
+  labs(x = "Highway mpg", y = "City mpg")
+```
+
+You can change the properties of the points
+
+```{r}
+ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point(color = "blue") +
+  labs(x = "Highway mpg", y = "City mpg")
+```
+
+
+Use hollow points with `shape` set to 21. 
+
+
+```{r}
+ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point(shape = 21, color = "red", fill = "pink") +
+  labs(x = "Highway mpg", y = "City mpg")
+```
+
+::: {.callout-tip title="Tip about aesthetics"}
+
+Use this reference for different aesthetics: https://ggplot2.tidyverse.org/articles/ggplot2-specs.html
+
+:::
+
+You can overlay a linear regression line by using `geom_smooth()`
+
+```{r}
+ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point(shape = 21, color = "red", fill = "pink") +
+  geom_smooth(method = "lm") +
+  labs(x = "Highway mpg", y = "City mpg")
+```
+
+The gray ribbon around the blue line shows the confidence interval. You can turn it off by specifying `se = FALSE`
+
+```{r}
+ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_point(shape = 21, color = "red", fill = "pink") +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Highway mpg", y = "City mpg")
+```
+
+If you change the order of `geom_point()` and `geom_smooth()` they are layered differently:
+
+```{r}
+ggplot(mpg, aes(x = hwy, y = cty)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(shape = 21, color = "red", fill = "pink") +
+  labs(x = "Highway mpg", y = "City mpg")
+```
+
+
+### Line graph
+
+
+A line graph shows a continuous variable on the Y axis plotted against a temporal variable on the X axis.
+Thus, you can plot dates, years, months, hours, etc. on the X axis.
+
+
+Unfortunately, `mpg` doesn't have a time series variable. So, we will use another data set that comes bundled with `ggplot2` called `economics`.
+
+
+```{r}
+head(economics)
+```
+Let's plot the US population against date
+
+```{r}
+ggplot(economics, aes(x = date, y = pop)) +
+  geom_line() 
+```
+
+The Y axis text is a bit hard to read because there are no comma separators. Recall you used `scales` package in homework 1 to add \$ signs to numbers. We can use a different function from the same package to add commas.
+
+```{r}
+ggplot(economics, aes(x = date, y = pop)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::comma_format())
+```
+
