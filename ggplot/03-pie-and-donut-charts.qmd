@@ -1,0 +1,95 @@
+---
+title: "Pie and donut charts"
+format: html
+---
+
+Install `ggforce` package
+
+```{r}
+#| message: false
+pacman::p_load(tidyverse, ggforce)
+```
+
+For this example, we will use 2020 US Presidential election results. Below I created a simple `tibble` (i.e., a data frame) with the election results.
+
+```{r}
+dt = tibble(candidate = c("Joe Biden", "Donald Trump"),
+             electoral_votes = c(306, 232))
+```
+
+Next, I used `geom_arc_bar()` from `ggforce` package, which creates a pie chart or a donut chart depending on the way we specify the parameters to `r0` and `r1` arguments. Read more about `ggforce` here: https://ggforce.data-imaginist.com
+
+## Pie chart
+
+`x0` and `y0` are the coordinates of the center of the circle. I want to the pie chart dead in the center so I set these to 0. `r0` is the radius of the inner circle and `r1` is the radius of the outer circle. For a pie chart, the inner circle does not exist so I set it 0. The outer circle has a radious of 1. 
+
+The number of electoral votes are mapped to `amount`. This will decide how large the slices are. Finally, `fill` will decide the colors of the slices if you want them different for two candidates. 
+
+```{r}
+ggplot(dt) +
+  ggforce::geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0, r = 1, 
+                   amount = electoral_votes, 
+                   fill = candidate), 
+               stat = 'pie',
+               color = "white") +
+  geom_label(x = c(0.5, -0.5), y = c(-0.3, 0.3), aes(label = electoral_votes)) +
+  scale_fill_manual(values = c("#e63946", "#004BA8")) +
+  theme_void() + 
+  coord_fixed() + # this makes sure the shape of the pie chart is preserved.
+  theme(legend.position = "none")
+```
+
+## Donut chart
+
+The only difference between the pie and donut charts is the inner circle radius. Here I set `r0` to 0.8, which gives us a donut chart. 
+
+```{r}
+ggplot(dt) +
+  geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.8, r = 1, 
+                   amount = electoral_votes, 
+                   fill = candidate), 
+               stat = 'pie',
+               color = "white") +
+  geom_label(x = c(0.85, -0.85), y = c(-0.3, 0.3), aes(label = electoral_votes)) +
+  scale_fill_manual(values = c("#e63946", "#004BA8")) +
+  theme_void() + 
+  coord_fixed() +
+  theme(legend.position = "none")
+```
+
+You can use the center of the donut chart to add stuff. For example, you can add a picture as shown below:
+
+```{r}
+sysfonts::font_add_google(name = "Inter", family = "Inter")
+sysfonts::font_add_google(name = "Inconsolata", family = "Inconsolata")
+```
+
+
+```{r}
+showtext::showtext_auto()
+
+ggplot(dt) +
+  geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0.8, r = 1, 
+                   amount = electoral_votes, 
+                   fill = candidate), 
+               stat = 'pie',
+               color = "white", linewidth = 0.1) +
+  geom_label(x = c(0.85, -0.85), y = c(-0.3, 0.3), 
+             aes(label = electoral_votes), 
+             family = "Inconsolata",
+             color = "white") +
+  annotation_raster(png::readPNG("Joe_Biden_2020.png"),
+                    xmin = -0.7, xmax = 0.7, ymin = -0.436, ymax = 0.436) +
+  scale_fill_manual(values = c("#e63946", "#004BA8")) +
+  theme_void() + 
+  coord_fixed() +
+  labs(title = "2020 US Presidential Elections Electoral Votes") +
+  theme(legend.position = "none",
+        plot.title = element_text(color = "white", hjust = 0.5, family = "Inter"),
+        plot.background = element_rect(fill = "#1d3557"),
+        panel.background = element_rect(fill = "#1d3557", linewidth = 0))
+
+showtext::showtext_end()
+```
+
+
